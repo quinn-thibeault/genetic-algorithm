@@ -16,8 +16,9 @@ struct organism //data carrying organism structure
 	unsigned int fitness; //fitness - cannot be under zero hence unsigned
 };
 
-char* random_genome(); //Defines a random genome of the length specified in GENOMESIZE macro
-void init_population(struct organism pop[]); //generates a population of POPSIZE with random genomes
+void random_genome(char* genome); //Defines a random genome of the length specified in GENOMESIZE macro
+void gen_random_population(struct organism pop[]); //generates a random population of POPSIZE with random genomes
+void init_population(struct organism pop[]); //initializes structures with memory allocated for genomes. 
 
 void calc_fitness(struct organism pop[]); //determines the fitness of all organisms in population by finding the difference between all of the characters
 void sort_by_fitness(struct organism pop[]); //bubble sorts the population so the most fit are in the front
@@ -37,6 +38,9 @@ int main(void)
 	struct organism *p_buf = buffer;
 
 	init_population(p_pop);
+	init_population(p_buf);
+
+	gen_random_population(p_pop);
 	
 	
 	for(int i=0;i<ITER; ++i){
@@ -53,7 +57,12 @@ int main(void)
 		swap(&p_pop, &p_buf);
 	}
 	
-	print_most_fit(p_pop);	
+	print_most_fit(p_pop);
+
+	for(int i=0;i<POPSIZE;++i){
+		free(population[i].genome);
+		free(buffer[i].genome);
+	}	
 	
 	return 0;
 }
@@ -67,20 +76,15 @@ void swap(struct organism **pop, struct organism **buffer)
 
 void print_most_fit(struct organism pop[])
 {
-
 	printf("Genome: %s Fitness: %d\n", pop[0].genome, pop[0].fitness);
 }
 
-char* random_genome(void)
-{
-	char* genome = malloc(sizeof(char) * GENOMESIZE+1);
-	
+void random_genome(char* genome)
+{	
 	for(int i=0;i<GENOMESIZE;++i){
 		genome[i] = (rand() % 26) + 97;
 	}
 	genome[GENOMESIZE] = '\0';
-	
-	return genome;
 }
 
 void calc_fitness(struct organism pop[])
@@ -112,10 +116,17 @@ void sort_by_fitness(struct organism pop[])
 	}
 }
 
+void gen_random_population(struct organism pop[])
+{
+	for(int i=0;i<POPSIZE;++i){
+		random_genome(pop[i].genome);
+	}
+}
+
 void init_population(struct organism* pop)
 {
 	for(int i=0;i<POPSIZE;++i){
-		pop[i].genome = random_genome();
+		pop[i].genome = malloc(sizeof(char) * GENOMESIZE+1);
 	}
 }
 
@@ -131,25 +142,20 @@ void regen_population(struct organism pop[], struct organism buffer[])
 	buffer[0] = pop[0];
 	buffer[1] = pop[1];
 
-	for(int i=2;i<POPSIZE;++i){
-		struct organism new_org;
-		new_org.genome = malloc(sizeof(char) * GENOMESIZE+1);
-		
+	for(int i=2;i<POPSIZE;++i){	
 		int p1 = rand() % (POPSIZE / 2);
 		int p2 = rand() % (POPSIZE / 2);
 		int r = rand() % GENOMESIZE;
 
 		for(int j=0;j<r;j++){
-			new_org.genome[j] = pop[p1].genome[j];
+			buffer[i].genome[j] = pop[p1].genome[j];
 		}
 
 		for(int l=r;l<GENOMESIZE;++l){
-			new_org.genome[l] = pop[p2].genome[l];
+			buffer[i].genome[l] = pop[p2].genome[l];
 		}
 
-		new_org.genome[GENOMESIZE] = '\0';
-		if(r < MUT) mutate(&new_org);
-	
-		buffer[i] = new_org;
+		buffer[i].genome[GENOMESIZE] = '\0';
+		if(r < MUT) mutate(&buffer[i]);
 	}
 }
