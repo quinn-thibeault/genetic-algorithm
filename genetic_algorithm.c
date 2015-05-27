@@ -3,7 +3,6 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
-#include "parameters.h"
 
 #define TARGET     "harryhan\0" //the target string for the algorithm to find
 #define POPSIZE    100 //the population size
